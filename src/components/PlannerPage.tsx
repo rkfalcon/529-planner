@@ -25,14 +25,26 @@ const PRESETS = [
   { label: "Scale to $600", m: 200, g: 200, d: 200 },
 ];
 
-function InfoTooltip({ text }: { text: string }) {
+function InfoTooltip({ text, below = true }: { text: string; below?: boolean }) {
   return (
     <span className="group relative inline-flex items-center ml-1 align-middle">
-      <span className="w-3.5 h-3.5 rounded-full bg-muted-foreground/25 text-muted-foreground text-[9px] font-bold flex items-center justify-center cursor-help select-none leading-none">
+      <span className="w-3.5 h-3.5 rounded-full bg-muted-foreground/30 text-muted-foreground text-[9px] font-bold flex items-center justify-center cursor-help select-none leading-none hover:bg-muted-foreground/50 transition-colors">
         ?
       </span>
-      <span className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-56 rounded-lg border border-border bg-popover px-3 py-2 text-xs text-popover-foreground shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-150 z-50 leading-relaxed whitespace-normal">
+      <span
+        className={`pointer-events-none absolute left-0 w-64 rounded-lg bg-gray-900 px-3 py-2.5 text-xs text-gray-50 shadow-xl opacity-0 group-hover:opacity-100 transition-opacity duration-150 z-50 leading-relaxed whitespace-normal ${
+          below ? "top-full mt-2" : "bottom-full mb-2"
+        }`}
+      >
         {text}
+        {/* Arrow */}
+        <span
+          className={`absolute left-2 border-4 border-transparent ${
+            below
+              ? "bottom-full border-b-gray-900"
+              : "top-full border-t-gray-900"
+          }`}
+        />
       </span>
     </span>
   );
