@@ -265,6 +265,27 @@ export function ChildPlannerCard({
           <span className="font-medium">Recommended strategy: </span>
           {recommendedAllocations[childKey].rationale}
         </div>
+
+        {/* Dynamic commentary */}
+        <div className="space-y-2.5">
+          <div className="text-sm font-medium">Analysis</div>
+          {insights.map((insight, i) => {
+            const s = insightStyles[insight.type];
+            return (
+              <div key={i} className={`rounded-lg border p-3 ${s.bg} ${s.border}`}>
+                <div className="flex items-start gap-2.5">
+                  <span className={`mt-0.5 flex-shrink-0 w-4 h-4 rounded-full flex items-center justify-center text-[10px] font-bold bg-white/70 dark:bg-black/30 ${s.iconColor}`}>
+                    {s.icon}
+                  </span>
+                  <div>
+                    <div className="text-xs font-semibold leading-snug mb-0.5">{insight.headline}</div>
+                    <div className="text-xs text-muted-foreground leading-relaxed">{insight.detail}</div>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
       </CardContent>
     </Card>
   );
