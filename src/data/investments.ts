@@ -322,6 +322,20 @@ export function calculateBlendedReturn(
   return totalWeight > 0 ? totalReturn / (totalWeight / 100) : 4;
 }
 
+// Actual holdings as of 03/27/2026 pulled from NY 529 portal
+export const actualAllocations: Record<string, Allocation[]> = {
+  marley: [
+    { optionId: "growth-stock-index", percentage: 78 },
+    { optionId: "moderate-growth", percentage: 22 },
+  ],
+  gabby: [
+    { optionId: "growth-stock-index", percentage: 100 },
+  ],
+  dean: [
+    { optionId: "growth-stock-index", percentage: 100 },
+  ],
+};
+
 export const recommendedAllocations: Record<string, RecommendedAllocation> = {
   marley: {
     allocations: [
