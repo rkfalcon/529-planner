@@ -143,6 +143,8 @@ export default function PlannerPage() {
   const totalCost = projections.marley.totalCost + projections.gabby.totalCost + projections.dean.totalCost;
   const totalCovered = projections.marley.covered + projections.gabby.covered + projections.dean.covered;
   const totalGap = projections.marley.gap + projections.gabby.gap + projections.dean.gap;
+  const currentTotalCovered = currentProjections.marley.covered + currentProjections.gabby.covered + currentProjections.dean.covered;
+  const currentTotalGap = currentProjections.marley.gap + currentProjections.gabby.gap + currentProjections.dean.gap;
   const totalMonthly = states.marley.monthlyContribution + states.gabby.monthlyContribution + states.dean.monthlyContribution;
   const totalLump = states.marley.lumpSum + states.gabby.lumpSum + states.dean.lumpSum;
 
