@@ -3,8 +3,8 @@ import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Slider } from "@/components/ui/slider";
 import { AllocationEditor } from "@/components/AllocationEditor";
-import { type Allocation, recommendedAllocations } from "@/data/investments";
-import { formatCurrency } from "@/lib/utils";
+import { type Allocation, recommendedAllocations, investmentOptions, categoryColors, calculateBlendedReturn } from "@/data/investments";
+import { formatCurrency, formatPct } from "@/lib/utils";
 import { type ProjectionResult } from "@/lib/projections";
 
 export interface ChildState {
@@ -22,6 +22,8 @@ interface ChildPlannerCardProps {
   balance: number;
   state: ChildState;
   projection: ProjectionResult;
+  currentProjection: ProjectionResult;
+  currentAllocs: Allocation[];
   costRange: [number, number];
   onChange: (updates: Partial<ChildState>) => void;
 }
@@ -34,6 +36,8 @@ export function ChildPlannerCard({
   balance,
   state,
   projection,
+  currentProjection,
+  currentAllocs,
   costRange,
   onChange,
 }: ChildPlannerCardProps) {
@@ -41,6 +45,9 @@ export function ChildPlannerCard({
     const rec = recommendedAllocations[childKey];
     onChange({ allocations: [...rec.allocations] });
   };
+
+  const targetReturn = calculateBlendedReturn(state.allocations, investmentOptions);
+  const currentReturn = calculateBlendedReturn(currentAllocs, investmentOptions);
 
   return (
     <Card className="overflow-hidden">
@@ -64,34 +71,73 @@ export function ChildPlannerCard({
           </div>
         </div>
       </CardHeader>
+
       <CardContent className="space-y-5">
-        {/* Projection summary */}
-        <div className="grid grid-cols-3 gap-2">
-          <div className="rounded-lg bg-muted p-2.5 text-center">
-            <div className="text-[11px] text-muted-foreground">4yr cost</div>
-            <div className="text-sm font-semibold mt-0.5">{formatCurrency(projection.totalCost)}</div>
-          </div>
-          <div className="rounded-lg bg-muted p-2.5 text-center">
-            <div className="text-[11px] text-muted-foreground">529 covers</div>
-            <div className="text-sm font-semibold mt-0.5 text-emerald-600">{formatCurrency(projection.covered)}</div>
-          </div>
-          <div className="rounded-lg bg-muted p-2.5 text-center">
-            <div className="text-[11px] text-muted-foreground">Gap</div>
-            <div className="text-sm font-semibold mt-0.5 text-amber-600">{formatCurrency(projection.gap)}</div>
+        {/* 4yr cost — same for both scenarios */}
+        <div className="rounded-lg bg-muted p-2.5 text-center">
+          <div className="text-[11px] text-muted-foreground">4yr cost</div>
+          <div className="text-base font-semibold mt-0.5">{formatCurrency(projection.totalCost)}</div>
+        </div>
+
+        {/* Current vs Target comparison */}
+        <div className="rounded-lg border overflow-hidden">
+          <div className="grid grid-cols-3 text-[11px]">
+            {/* Column headers */}
+            <div className="px-3 py-2 bg-muted/50 text-muted-foreground font-medium"></div>
+            <div className="px-3 py-2 bg-muted/50 text-center text-muted-foreground font-medium border-l border-border">
+              Current
+            </div>
+            <div className="px-3 py-2 bg-muted/50 text-center font-semibold border-l border-border" style={{ color }}>
+              Target
+            </div>
+
+            {/* 529 covers */}
+            <div className="px-3 py-2 text-muted-foreground border-t border-border">529 covers</div>
+            <div className="px-3 py-2 text-center border-t border-l border-border">{formatCurrency(currentProjection.covered)}</div>
+            <div className="px-3 py-2 text-center font-semibold text-emerald-600 border-t border-l border-border">{formatCurrency(projection.covered)}</div>
+
+            {/* Gap */}
+            <div className="px-3 py-2 text-muted-foreground border-t border-border">Gap</div>
+            <div className="px-3 py-2 text-center border-t border-l border-border">{formatCurrency(currentProjection.gap)}</div>
+            <div className="px-3 py-2 text-center font-semibold text-amber-600 border-t border-l border-border">{formatCurrency(projection.gap)}</div>
+
+            {/* % funded */}
+            <div className="px-3 py-2 text-muted-foreground border-t border-border">% funded</div>
+            <div className="px-3 py-2 text-center border-t border-l border-border">{currentProjection.percentFunded}%</div>
+            <div className="px-3 py-2 text-center font-semibold border-t border-l border-border">{projection.percentFunded}%</div>
+
+            {/* Est. return */}
+            <div className="px-3 py-2 text-muted-foreground border-t border-border">Est. return</div>
+            <div className="px-3 py-2 text-center border-t border-l border-border">{formatPct(currentReturn)}</div>
+            <div className="px-3 py-2 text-center font-semibold border-t border-l border-border" style={{ color }}>{formatPct(targetReturn)}</div>
           </div>
         </div>
 
-        {/* Funding bar */}
-        <div>
-          <div className="flex justify-between text-xs text-muted-foreground mb-1">
-            <span>{projection.percentFunded}% funded</span>
-            <span>Est. return: {projection.preCollegeReturn.toFixed(1)}%</span>
+        {/* Funding bars */}
+        <div className="space-y-2">
+          <div>
+            <div className="flex justify-between text-xs text-muted-foreground mb-1">
+              <span>Current · {currentProjection.percentFunded}% funded</span>
+              <span>{formatPct(currentReturn)} return</span>
+            </div>
+            <div className="h-2.5 rounded-full bg-muted overflow-hidden">
+              <div
+                className="h-full rounded-full bg-muted-foreground/40 transition-all duration-500"
+                style={{ width: `${currentProjection.percentFunded}%` }}
+              />
+            </div>
           </div>
-          <div className="h-3 rounded-full bg-muted overflow-hidden">
-            <div
-              className="h-full rounded-full transition-all duration-500"
-              style={{ width: `${projection.percentFunded}%`, backgroundColor: color }}
-            />
+          <div>
+            <div className="flex justify-between text-xs text-muted-foreground mb-1">
+              <span>Target · {projection.percentFunded}% funded</span>
+              <span>{formatPct(targetReturn)} return</span>
+            </div>
+            <div className="h-2.5 rounded-full bg-muted overflow-hidden">
+              <div
+                className="h-full rounded-full transition-all duration-500"
+                style={{ width: `${projection.percentFunded}%`, backgroundColor: color }}
+              />
+            </div>
           </div>
         </div>
 
@@ -154,10 +200,33 @@ export function ChildPlannerCard({
           />
         </div>
 
-        {/* Investment allocation */}
+        {/* Today's holdings (read-only) */}
+        <div>
+          <div className="text-sm font-medium mb-2">Today's holdings</div>
+          <div className="rounded-lg bg-muted/50 p-3 space-y-1.5">
+            {currentAllocs.map((alloc) => {
+              const opt = investmentOptions.find((o) => o.id === alloc.optionId);
+              if (!opt) return null;
+              return (
+                <div key={alloc.optionId} className="flex items-center justify-between text-xs">
+                  <div className="flex items-center gap-1.5 min-w-0">
+                    <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: categoryColors[opt.category] }} />
+                    <span className="text-muted-foreground truncate">{opt.shortName}</span>
+                  </div>
+                  <span className="font-medium ml-2 flex-shrink-0">{alloc.percentage}%</span>
+                </div>
+              );
+            })}
+            <div className="text-[11px] text-muted-foreground pt-1.5 border-t border-border/50 mt-1">
+              Blended return: <span className="font-medium">{formatPct(currentReturn)}</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Target allocation (editable) */}
         <div>
           <div className="flex items-center justify-between mb-3">
-            <span className="text-sm font-medium">Investment allocation</span>
+            <span className="text-sm font-medium">Target allocation</span>
             <button
               onClick={handleReset}
               className="text-xs text-muted-foreground hover:text-foreground underline-offset-2 hover:underline transition-colors"
