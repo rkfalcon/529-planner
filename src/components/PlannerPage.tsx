@@ -292,7 +292,10 @@ export default function PlannerPage() {
                 <span className="text-base font-semibold">{formatCurrency(totalLump)}</span>
               </div>
               <div className="flex items-baseline justify-between gap-2 pt-1 border-t border-border/50">
-                <span className="text-[11px] text-muted-foreground">Annual total</span>
+                <span className="text-[11px] text-muted-foreground flex items-center">
+                  Annual total
+                  <InfoTooltip text="Total new money flowing into the 529s this year: monthly contributions × 12 plus any lump sums. The 2026 NY 529 annual contribution limit per beneficiary is $18,000 (gift tax exclusion)." />
+                </span>
                 <span className="text-[11px] font-semibold">{formatCurrency(totalMonthly * 12 + totalLump)}</span>
               </div>
             </div>
