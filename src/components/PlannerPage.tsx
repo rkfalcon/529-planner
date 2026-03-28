@@ -190,27 +190,43 @@ export default function PlannerPage() {
       <main className="max-w-7xl mx-auto px-4 py-6 sm:px-6 lg:px-8 space-y-6">
         {/* Summary dashboard */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          {/* Total cost — single value, no current/target split */}
+
+          {/* Total cost */}
           <div className="rounded-xl bg-muted p-4">
-            <div className="text-xs text-muted-foreground mb-2">Total cost (3 kids)</div>
+            <div className="text-xs text-muted-foreground mb-2 flex items-center">
+              Total cost (3 kids)
+              <InfoTooltip text="Your estimated total 4-year college costs across all three kids combined. Adjust each child's cost slider to reflect in-state vs. out-of-state tuition, expected scholarships, or financial aid." />
+            </div>
             <div className="text-xl font-bold">{formatCurrency(totalCost)}</div>
           </div>
 
           {/* 529 covers — current vs target */}
           <div className="rounded-xl bg-muted p-4">
-            <div className="text-xs text-muted-foreground mb-2">529 covers</div>
+            <div className="text-xs text-muted-foreground mb-2 flex items-center">
+              529 covers
+              <InfoTooltip text="Projected amount your 529 accounts will cover across all three kids' college costs. These are estimates based on historical fund returns compounded over time — actual results will vary. Not a guarantee." />
+            </div>
             <div className="space-y-1.5">
               <div className="flex items-baseline justify-between gap-2">
-                <span className="text-[11px] text-muted-foreground">Current</span>
+                <span className="text-[11px] text-muted-foreground flex items-center">
+                  Current
+                  <InfoTooltip text="Projection using your actual NY 529 holdings as of 03/27/2026: Marley (78% Growth Stock / 22% Moderate Growth), Gabby & Dean (100% Growth Stock Index). Nothing has been rebalanced." />
+                </span>
                 <span className="text-base font-semibold text-emerald-600">{formatCurrency(currentTotalCovered)}</span>
               </div>
               <div className="flex items-baseline justify-between gap-2">
-                <span className="text-[11px] text-muted-foreground">Target</span>
+                <span className="text-[11px] text-muted-foreground flex items-center">
+                  Target
+                  <InfoTooltip text="Projection if you rebalance each child's account to the target allocations shown in their tab. Updates live as you adjust sliders or allocation percentages." />
+                </span>
                 <span className="text-base font-semibold text-emerald-600">{formatCurrency(totalCovered)}</span>
               </div>
               {totalCovered !== currentTotalCovered && (
                 <div className="flex items-baseline justify-between gap-2 pt-1 border-t border-border/50">
-                  <span className="text-[11px] text-muted-foreground">Δ rebalance</span>
+                  <span className="text-[11px] text-muted-foreground flex items-center">
+                    Δ rebalance
+                    <InfoTooltip text="The net dollar change in projected coverage from switching to target allocations across all three accounts. Green means rebalancing improves projected coverage; amber means it reduces it (often intentional — trading return for lower risk)." />
+                  </span>
                   <span className={`text-[11px] font-semibold ${totalCovered >= currentTotalCovered ? "text-emerald-600" : "text-amber-600"}`}>
                     {totalCovered >= currentTotalCovered ? "+" : ""}{formatCurrency(totalCovered - currentTotalCovered)}
                   </span>
@@ -221,19 +237,31 @@ export default function PlannerPage() {
 
           {/* Total gap — current vs target */}
           <div className="rounded-xl bg-muted p-4">
-            <div className="text-xs text-muted-foreground mb-2">Total gap</div>
+            <div className="text-xs text-muted-foreground mb-2 flex items-center">
+              Total gap
+              <InfoTooltip text="The projected funding shortfall — how much of the total college costs your 529s won't cover. You'd need to fund this from other sources: personal savings, student loans, part-time work, or scholarships." />
+            </div>
             <div className="space-y-1.5">
               <div className="flex items-baseline justify-between gap-2">
-                <span className="text-[11px] text-muted-foreground">Current</span>
+                <span className="text-[11px] text-muted-foreground flex items-center">
+                  Current
+                  <InfoTooltip text="Projected gap using today's actual NY 529 holdings — before any rebalancing. This is your baseline: where things stand if you make no allocation changes." />
+                </span>
                 <span className="text-base font-semibold text-amber-600">{formatCurrency(currentTotalGap)}</span>
               </div>
               <div className="flex items-baseline justify-between gap-2">
-                <span className="text-[11px] text-muted-foreground">Target</span>
+                <span className="text-[11px] text-muted-foreground flex items-center">
+                  Target
+                  <InfoTooltip text="Projected gap after rebalancing to the target allocations. A larger gap than current doesn't necessarily mean a worse plan — it may reflect a more risk-appropriate allocation that trades some expected return for stability." />
+                </span>
                 <span className="text-base font-semibold text-amber-600">{formatCurrency(totalGap)}</span>
               </div>
               {totalGap !== currentTotalGap && (
                 <div className="flex items-baseline justify-between gap-2 pt-1 border-t border-border/50">
-                  <span className="text-[11px] text-muted-foreground">Δ rebalance</span>
+                  <span className="text-[11px] text-muted-foreground flex items-center">
+                    Δ rebalance
+                    <InfoTooltip text="How the gap changes by switching to target allocations. A positive number (amber) means the gap grows after rebalancing — common when moving from aggressive to conservative funds. A negative number (green) means rebalancing reduces the gap." />
+                  </span>
                   <span className={`text-[11px] font-semibold ${totalGap <= currentTotalGap ? "text-emerald-600" : "text-amber-600"}`}>
                     {totalGap <= currentTotalGap ? "" : "+"}{formatCurrency(totalGap - currentTotalGap)}
                   </span>
@@ -244,14 +272,23 @@ export default function PlannerPage() {
 
           {/* Contributions */}
           <div className="rounded-xl bg-muted p-4">
-            <div className="text-xs text-muted-foreground mb-2">Contributions</div>
+            <div className="text-xs text-muted-foreground mb-2 flex items-center">
+              Contributions
+              <InfoTooltip text="New money you're adding to the 529 accounts. Contributions are invested at each child's target allocation and compound with investment returns over time." />
+            </div>
             <div className="space-y-1.5">
               <div className="flex items-baseline justify-between gap-2">
-                <span className="text-[11px] text-muted-foreground">Monthly</span>
+                <span className="text-[11px] text-muted-foreground flex items-center">
+                  Monthly
+                  <InfoTooltip text="Combined monthly contributions across all three accounts. Adjust each child's slider independently — contributions don't have to be equal." />
+                </span>
                 <span className="text-base font-semibold">{formatCurrency(totalMonthly)}</span>
               </div>
               <div className="flex items-baseline justify-between gap-2">
-                <span className="text-[11px] text-muted-foreground">Lump sums</span>
+                <span className="text-[11px] text-muted-foreground flex items-center">
+                  Lump sums
+                  <InfoTooltip text="One-time additions to each child's balance, applied immediately and then projected to grow with investment returns. Use the lump sum slider on each child's tab." />
+                </span>
                 <span className="text-base font-semibold">{formatCurrency(totalLump)}</span>
               </div>
               <div className="flex items-baseline justify-between gap-2 pt-1 border-t border-border/50">
