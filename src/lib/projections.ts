@@ -78,17 +78,18 @@ export function projectChild(config: ChildConfig): ProjectionResult {
   }
 
   // College years with withdrawals
+  // Apply growth + contributions first (money earns through the year), then withdraw at year-end
   const annualCost = config.totalCost / config.yearsInCollege;
   let totalWithdrawn = 0;
 
   for (let y = 0; y < config.yearsInCollege; y++) {
     const start = bal;
-    const withdraw = Math.min(bal, annualCost);
+    const contrib = mo * 12;
+    const growth = bal * durReturn;
+    bal = bal * (1 + durReturn) + contrib; // balance grows through the year
+    const withdraw = Math.min(bal, annualCost); // tuition paid at year-end
     bal -= withdraw;
     totalWithdrawn += withdraw;
-    const growth = bal * durReturn;
-    const contrib = mo * 12;
-    bal = bal * (1 + durReturn) + contrib;
     yearByYear.push({
       year: preYears + (fractionalYear > 0 ? 2 : 1) + y,
       label: `College yr ${y + 1}`,
