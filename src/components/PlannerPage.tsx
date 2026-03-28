@@ -25,6 +25,19 @@ const PRESETS = [
   { label: "Scale to $600", m: 200, g: 200, d: 200 },
 ];
 
+function InfoTooltip({ text }: { text: string }) {
+  return (
+    <span className="group relative inline-flex items-center ml-1 align-middle">
+      <span className="w-3.5 h-3.5 rounded-full bg-muted-foreground/25 text-muted-foreground text-[9px] font-bold flex items-center justify-center cursor-help select-none leading-none">
+        ?
+      </span>
+      <span className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-56 rounded-lg border border-border bg-popover px-3 py-2 text-xs text-popover-foreground shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-150 z-50 leading-relaxed whitespace-normal">
+        {text}
+      </span>
+    </span>
+  );
+}
+
 export default function PlannerPage() {
   const [states, setStates] = useState<Record<ChildKey, ChildState>>({
     marley: {
