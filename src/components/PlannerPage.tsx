@@ -188,55 +188,44 @@ export default function PlannerPage() {
           </CardContent>
         </Card>
 
-        {/* Charts */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm">Coverage vs. gap by child</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ResponsiveContainer width="100%" height={260}>
-                <BarChart data={barData} barCategoryGap="20%">
-                  <XAxis dataKey="name" tick={{ fontSize: 13 }} axisLine={false} tickLine={false} />
-                  <YAxis
-                    tickFormatter={(v) => `$${(v / 1000).toFixed(0)}k`}
-                    tick={{ fontSize: 11 }}
-                    axisLine={false}
-                    tickLine={false}
-                  />
-                  <Tooltip
-                    formatter={(v: number) => formatCurrency(v)}
-                    contentStyle={{
-                      borderRadius: 8,
-                      border: "1px solid hsl(var(--border))",
-                      background: "hsl(var(--card))",
-                      fontSize: 13,
-                    }}
-                  />
-                  <Bar dataKey="covered" stackId="a" name="529 covers" fill="#1D9E75" radius={[0, 0, 0, 0]} />
-                  <Bar dataKey="gap" stackId="a" name="Gap" fill="#BA7517" radius={[4, 4, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
-              <div className="flex gap-4 justify-center text-xs text-muted-foreground mt-1">
-                <span className="flex items-center gap-1.5">
-                  <span className="w-2.5 h-2.5 rounded-sm bg-emerald-600" /> 529 covers
-                </span>
-                <span className="flex items-center gap-1.5">
-                  <span className="w-2.5 h-2.5 rounded-sm bg-amber-600" /> Gap
-                </span>
+        {/* Projected outcomes snapshot */}
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm">Projected outcomes by graduation</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {(Object.keys(CHILDREN) as ChildKey[]).map((key) => (
+                <ChildSnapshot
+                  key={key}
+                  label={CHILDREN[key].label}
+                  color={CHILDREN[key].color}
+                  state={states[key]}
+                  projection={projections[key]}
+                  onChange={(updates) => updateChild(key, updates)}
+                />
+              ))}
+            </div>
+            <div className="mt-4 pt-4 border-t grid grid-cols-2 sm:grid-cols-4 gap-3">
+              <div className="rounded-lg bg-muted p-3">
+                <div className="text-xs text-muted-foreground">Total cost (3 kids)</div>
+                <div className="text-base font-bold mt-0.5">{formatCurrency(totalCost)}</div>
               </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm">Current allocation by category (all accounts)</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <AllocationPieChart states={states} />
-            </CardContent>
-          </Card>
-        </div>
+              <div className="rounded-lg bg-muted p-3">
+                <div className="text-xs text-muted-foreground">529 covers</div>
+                <div className="text-base font-bold mt-0.5 text-emerald-600">{formatCurrency(totalCovered)}</div>
+              </div>
+              <div className="rounded-lg bg-muted p-3">
+                <div className="text-xs text-muted-foreground">Total gap</div>
+                <div className="text-base font-bold mt-0.5 text-amber-600">{formatCurrency(totalGap)}</div>
+              </div>
+              <div className="rounded-lg bg-muted p-3">
+                <div className="text-xs text-muted-foreground">New contributions</div>
+                <div className="text-base font-bold mt-0.5">{formatCurrency(totalMonthly * 12)}<span className="text-sm font-normal text-muted-foreground">/yr</span></div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Per-child planners */}
         <Tabs defaultValue="marley">
