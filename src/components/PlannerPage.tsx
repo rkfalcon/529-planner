@@ -107,12 +107,6 @@ export default function PlannerPage() {
   const totalMonthly = states.marley.monthlyContribution + states.gabby.monthlyContribution + states.dean.monthlyContribution;
   const totalLump = states.marley.lumpSum + states.gabby.lumpSum + states.dean.lumpSum;
 
-  const barData = (Object.keys(CHILDREN) as ChildKey[]).map((key) => ({
-    name: CHILDREN[key].label,
-    covered: projections[key].covered,
-    gap: projections[key].gap,
-  }));
-
   // Investment options reference data
   const optionsByCategory = investmentOptions.reduce<Record<string, typeof investmentOptions>>((acc, opt) => {
     (acc[opt.category] = acc[opt.category] || []).push(opt);
