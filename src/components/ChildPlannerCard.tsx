@@ -43,6 +43,7 @@ export function ChildPlannerCard({
   subtitle,
   color,
   balance,
+  yearsToCollege,
   state,
   projection,
   currentProjection,
@@ -57,6 +58,15 @@ export function ChildPlannerCard({
 
   const targetReturn = calculateBlendedReturn(state.allocations, investmentOptions);
   const currentReturn = calculateBlendedReturn(currentAllocs, investmentOptions);
+
+  const insights = useMemo(() => generateCommentary({
+    label,
+    yearsToCollege,
+    currentProjection,
+    targetProjection: projection,
+    currentAllocs,
+    targetAllocs: state.allocations,
+  }), [label, yearsToCollege, currentProjection, projection, currentAllocs, state.allocations]);
 
   return (
     <Card className="overflow-hidden">
