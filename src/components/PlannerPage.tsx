@@ -3,13 +3,10 @@ import React, { useState, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { ChildPlannerCard, type ChildState } from "@/components/ChildPlannerCard";
-import { recommendedAllocations, investmentOptions, getExpectedReturn, categoryColors, categoryLabels } from "@/data/investments";
-import { projectChild, projectMarley } from "@/lib/projections";
+import { recommendedAllocations, investmentOptions, getExpectedReturn, categoryColors, categoryLabels, calculateBlendedReturn } from "@/data/investments";
+import { projectChild, projectMarley, type ProjectionResult } from "@/lib/projections";
+import { AllocationEditor } from "@/components/AllocationEditor";
 import { formatCurrency, formatPct } from "@/lib/utils";
-import {
-  BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend, Cell,
-  PieChart, Pie,
-} from "recharts";
 
 const CHILDREN = {
   marley: { label: "Marley", color: "#E24B4A", balance: 50553, subtitle: "Freshman at UDel · withdrawing now", costRange: [40000, 260000] as [number, number], yearsToCollege: 0, yearsInCollege: 3 },
