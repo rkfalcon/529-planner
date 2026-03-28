@@ -327,67 +327,99 @@ export default function PlannerPage() {
   );
 }
 
-function AllocationPieChart({ states }: { states: Record<ChildKey, ChildState> }) {
-  const categoryTotals: Record<string, number> = {};
-  let totalDollars = 0;
-
-  for (const key of Object.keys(CHILDREN) as ChildKey[]) {
-    const balance = CHILDREN[key].balance;
-    for (const alloc of states[key].allocations) {
-      const opt = investmentOptions.find((o) => o.id === alloc.optionId);
-      if (opt) {
-        const dollars = (alloc.percentage / 100) * balance;
-        categoryTotals[opt.category] = (categoryTotals[opt.category] || 0) + dollars;
-        totalDollars += dollars;
-      }
-    }
-  }
-
-  const pieData = Object.entries(categoryTotals)
-    .filter(([, v]) => v > 0)
-    .map(([cat, val]) => ({
-      name: categoryLabels[cat],
-      value: Math.round(val),
-      color: categoryColors[cat],
-      pct: Math.round((val / totalDollars) * 100),
-    }));
+function ChildSnapshot({
+  label,
+  color,
+  state,
+  projection,
+  onChange,
+}: {
+  label: string;
+  color: string;
+  state: ChildState;
+  projection: ProjectionResult;
+  onChange: (updates: Partial<ChildState>) => void;
+}) {
+  const [editingAlloc, setEditingAlloc] = useState(false);
+  const blendedReturn = calculateBlendedReturn(state.allocations, investmentOptions);
 
   return (
-    <div>
-      <ResponsiveContainer width="100%" height={220}>
-        <PieChart>
-          <Pie
-            data={pieData}
-            dataKey="value"
-            cx="50%"
-            cy="50%"
-            innerRadius={55}
-            outerRadius={90}
-            paddingAngle={2}
-            stroke="none"
-          >
-            {pieData.map((entry, idx) => (
-              <Cell key={idx} fill={entry.color} />
-            ))}
-          </Pie>
-          <Tooltip
-            formatter={(v: number) => formatCurrency(v)}
-            contentStyle={{
-              borderRadius: 8,
-              border: "1px solid hsl(var(--border))",
-              background: "hsl(var(--card))",
-              fontSize: 13,
-            }}
+    <div className="rounded-xl border bg-card p-4 space-y-3">
+      {/* Header */}
+      <div className="flex items-center gap-2">
+        <span className="w-3 h-3 rounded-full flex-shrink-0" style={{ backgroundColor: color }} />
+        <span className="font-semibold text-sm">{label}</span>
+      </div>
+
+      {/* 4yr cost */}
+      <div className="text-center">
+        <div className="text-xs text-muted-foreground">4yr cost</div>
+        <div className="text-2xl font-bold mt-0.5">{formatCurrency(projection.totalCost)}</div>
+      </div>
+
+      {/* 529 covers / Gap */}
+      <div className="grid grid-cols-2 gap-2">
+        <div className="rounded-lg bg-muted p-2 text-center">
+          <div className="text-[11px] text-muted-foreground">529 covers</div>
+          <div className="text-sm font-semibold text-emerald-600 mt-0.5">{formatCurrency(projection.covered)}</div>
+        </div>
+        <div className="rounded-lg bg-muted p-2 text-center">
+          <div className="text-[11px] text-muted-foreground">Gap</div>
+          <div className="text-sm font-semibold text-amber-600 mt-0.5">{formatCurrency(projection.gap)}</div>
+        </div>
+      </div>
+
+      {/* Progress bar */}
+      <div>
+        <div className="h-2.5 rounded-full bg-muted overflow-hidden">
+          <div
+            className="h-full rounded-full transition-all duration-500"
+            style={{ width: `${Math.min(projection.percentFunded, 100)}%`, backgroundColor: color }}
           />
-        </PieChart>
-      </ResponsiveContainer>
-      <div className="flex flex-wrap gap-3 justify-center text-xs text-muted-foreground">
-        {pieData.map((d) => (
-          <span key={d.name} className="flex items-center gap-1.5">
-            <span className="w-2.5 h-2.5 rounded-sm" style={{ backgroundColor: d.color }} />
-            {d.name} ({d.pct}%)
-          </span>
-        ))}
+        </div>
+        <div className="text-xs text-muted-foreground mt-1 text-center">{projection.percentFunded}% funded</div>
+      </div>
+
+      {/* Allocations */}
+      <div className="border-t pt-3">
+        <div className="flex items-center justify-between mb-2">
+          <div className="text-xs font-medium">
+            Allocations ·{" "}
+            <span style={{ color }}>{formatPct(blendedReturn)} blended</span>
+          </div>
+          <button
+            onClick={() => setEditingAlloc(!editingAlloc)}
+            className="text-xs text-muted-foreground hover:text-foreground underline-offset-2 hover:underline transition-colors"
+          >
+            {editingAlloc ? "Done" : "Edit"}
+          </button>
+        </div>
+        {!editingAlloc ? (
+          <div className="space-y-1.5">
+            {state.allocations.map((alloc) => {
+              const opt = investmentOptions.find((o) => o.id === alloc.optionId);
+              if (!opt) return null;
+              return (
+                <div key={alloc.optionId} className="flex items-center justify-between text-xs">
+                  <div className="flex items-center gap-1.5 min-w-0">
+                    <span
+                      className="w-2 h-2 rounded-full flex-shrink-0"
+                      style={{ backgroundColor: categoryColors[opt.category] }}
+                    />
+                    <span className="text-muted-foreground truncate">{opt.shortName}</span>
+                  </div>
+                  <span className="font-medium ml-2 flex-shrink-0">{alloc.percentage}%</span>
+                </div>
+              );
+            })}
+          </div>
+        ) : (
+          <AllocationEditor
+            allocations={state.allocations}
+            onChange={(a) => onChange({ allocations: a })}
+            childColor={color}
+          />
+        )}
       </div>
     </div>
   );
