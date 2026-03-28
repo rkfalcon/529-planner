@@ -176,26 +176,76 @@ export default function PlannerPage() {
 
       <main className="max-w-7xl mx-auto px-4 py-6 sm:px-6 lg:px-8 space-y-6">
         {/* Summary dashboard */}
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          {/* Total cost — single value, no current/target split */}
           <div className="rounded-xl bg-muted p-4">
-            <div className="text-xs text-muted-foreground">Total cost (3 kids)</div>
-            <div className="text-xl font-bold mt-1">{formatCurrency(totalCost)}</div>
+            <div className="text-xs text-muted-foreground mb-2">Total cost (3 kids)</div>
+            <div className="text-xl font-bold">{formatCurrency(totalCost)}</div>
           </div>
+
+          {/* 529 covers — current vs target */}
           <div className="rounded-xl bg-muted p-4">
-            <div className="text-xs text-muted-foreground">529 covers</div>
-            <div className="text-xl font-bold mt-1 text-emerald-600">{formatCurrency(totalCovered)}</div>
+            <div className="text-xs text-muted-foreground mb-2">529 covers</div>
+            <div className="space-y-1.5">
+              <div className="flex items-baseline justify-between gap-2">
+                <span className="text-[11px] text-muted-foreground">Current</span>
+                <span className="text-base font-semibold text-emerald-600">{formatCurrency(currentTotalCovered)}</span>
+              </div>
+              <div className="flex items-baseline justify-between gap-2">
+                <span className="text-[11px] text-muted-foreground">Target</span>
+                <span className="text-base font-semibold text-emerald-600">{formatCurrency(totalCovered)}</span>
+              </div>
+              {totalCovered !== currentTotalCovered && (
+                <div className="flex items-baseline justify-between gap-2 pt-1 border-t border-border/50">
+                  <span className="text-[11px] text-muted-foreground">Δ rebalance</span>
+                  <span className={`text-[11px] font-semibold ${totalCovered >= currentTotalCovered ? "text-emerald-600" : "text-amber-600"}`}>
+                    {totalCovered >= currentTotalCovered ? "+" : ""}{formatCurrency(totalCovered - currentTotalCovered)}
+                  </span>
+                </div>
+              )}
+            </div>
           </div>
+
+          {/* Total gap — current vs target */}
           <div className="rounded-xl bg-muted p-4">
-            <div className="text-xs text-muted-foreground">Total gap</div>
-            <div className="text-xl font-bold mt-1 text-amber-600">{formatCurrency(totalGap)}</div>
+            <div className="text-xs text-muted-foreground mb-2">Total gap</div>
+            <div className="space-y-1.5">
+              <div className="flex items-baseline justify-between gap-2">
+                <span className="text-[11px] text-muted-foreground">Current</span>
+                <span className="text-base font-semibold text-amber-600">{formatCurrency(currentTotalGap)}</span>
+              </div>
+              <div className="flex items-baseline justify-between gap-2">
+                <span className="text-[11px] text-muted-foreground">Target</span>
+                <span className="text-base font-semibold text-amber-600">{formatCurrency(totalGap)}</span>
+              </div>
+              {totalGap !== currentTotalGap && (
+                <div className="flex items-baseline justify-between gap-2 pt-1 border-t border-border/50">
+                  <span className="text-[11px] text-muted-foreground">Δ rebalance</span>
+                  <span className={`text-[11px] font-semibold ${totalGap <= currentTotalGap ? "text-emerald-600" : "text-amber-600"}`}>
+                    {totalGap <= currentTotalGap ? "" : "+"}{formatCurrency(totalGap - currentTotalGap)}
+                  </span>
+                </div>
+              )}
+            </div>
           </div>
+
+          {/* Contributions */}
           <div className="rounded-xl bg-muted p-4">
-            <div className="text-xs text-muted-foreground">Monthly contributions</div>
-            <div className="text-xl font-bold mt-1">{formatCurrency(totalMonthly)}</div>
-          </div>
-          <div className="rounded-xl bg-muted p-4 col-span-2 md:col-span-1">
-            <div className="text-xs text-muted-foreground">Lump sums</div>
-            <div className="text-xl font-bold mt-1">{formatCurrency(totalLump)}</div>
+            <div className="text-xs text-muted-foreground mb-2">Contributions</div>
+            <div className="space-y-1.5">
+              <div className="flex items-baseline justify-between gap-2">
+                <span className="text-[11px] text-muted-foreground">Monthly</span>
+                <span className="text-base font-semibold">{formatCurrency(totalMonthly)}</span>
+              </div>
+              <div className="flex items-baseline justify-between gap-2">
+                <span className="text-[11px] text-muted-foreground">Lump sums</span>
+                <span className="text-base font-semibold">{formatCurrency(totalLump)}</span>
+              </div>
+              <div className="flex items-baseline justify-between gap-2 pt-1 border-t border-border/50">
+                <span className="text-[11px] text-muted-foreground">Annual total</span>
+                <span className="text-[11px] font-semibold">{formatCurrency(totalMonthly * 12 + totalLump)}</span>
+              </div>
+            </div>
           </div>
         </div>
 
