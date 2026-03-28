@@ -34,7 +34,7 @@ export interface YearSnapshot {
 
 export function projectChild(config: ChildConfig): ProjectionResult {
   const preReturn = calculateBlendedReturn(config.allocations, investmentOptions) / 100;
-  const durReturn = config.duringCollegeReturn / 100;
+  const durReturn = preReturn; // Use the same blended allocation return during college so allocation changes affect all phases
   const yearByYear: YearSnapshot[] = [];
 
   let bal = config.currentBalance + config.lumpSum;
