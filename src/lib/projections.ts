@@ -128,14 +128,15 @@ export function projectMarley(config: ChildConfig): ProjectionResult {
   let totalWithdrawn = 0;
 
   // Marley is already in college — 3 years remaining
+  // Apply growth + contributions first (money earns through the year), then withdraw at year-end
   for (let y = 0; y < config.yearsInCollege; y++) {
     const start = bal;
-    const withdraw = Math.min(bal, annualCost);
+    const contrib = mo * 12;
+    const growth = bal * preReturn;
+    bal = bal * (1 + preReturn) + contrib; // balance grows through the year
+    const withdraw = Math.min(bal, annualCost); // tuition paid at year-end
     bal -= withdraw;
     totalWithdrawn += withdraw;
-    const growth = bal * preReturn;
-    const contrib = mo * 12;
-    bal = bal * (1 + preReturn) + contrib;
     yearByYear.push({
       year: y + 1,
       label: `College yr ${y + 2}`, // She's a freshman, these are remaining years
