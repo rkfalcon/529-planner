@@ -1,11 +1,12 @@
 "use client";
-import React from "react";
+import React, { useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Slider } from "@/components/ui/slider";
 import { AllocationEditor } from "@/components/AllocationEditor";
 import { type Allocation, recommendedAllocations, investmentOptions, categoryColors, calculateBlendedReturn } from "@/data/investments";
 import { formatCurrency, formatPct } from "@/lib/utils";
 import { type ProjectionResult } from "@/lib/projections";
+import { generateCommentary, type InsightType } from "@/lib/commentary";
 
 export interface ChildState {
   monthlyContribution: number;
@@ -20,6 +21,7 @@ interface ChildPlannerCardProps {
   subtitle: string;
   color: string;
   balance: number;
+  yearsToCollege: number;
   state: ChildState;
   projection: ProjectionResult;
   currentProjection: ProjectionResult;
@@ -27,6 +29,13 @@ interface ChildPlannerCardProps {
   costRange: [number, number];
   onChange: (updates: Partial<ChildState>) => void;
 }
+
+const insightStyles: Record<InsightType, { bg: string; border: string; icon: string; iconColor: string }> = {
+  positive: { bg: "bg-emerald-50 dark:bg-emerald-950/30", border: "border-emerald-200 dark:border-emerald-800", icon: "✓", iconColor: "text-emerald-600" },
+  info:     { bg: "bg-blue-50 dark:bg-blue-950/30",    border: "border-blue-200 dark:border-blue-800",    icon: "i", iconColor: "text-blue-600"    },
+  caution:  { bg: "bg-amber-50 dark:bg-amber-950/30",  border: "border-amber-200 dark:border-amber-800",  icon: "!", iconColor: "text-amber-600"   },
+  warning:  { bg: "bg-red-50 dark:bg-red-950/30",      border: "border-red-200 dark:border-red-800",      icon: "⚠", iconColor: "text-red-600"     },
+};
 
 export function ChildPlannerCard({
   childKey,
