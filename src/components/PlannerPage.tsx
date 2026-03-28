@@ -3,7 +3,7 @@ import React, { useState, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { ChildPlannerCard, type ChildState } from "@/components/ChildPlannerCard";
-import { recommendedAllocations, investmentOptions, getExpectedReturn, categoryColors, categoryLabels, calculateBlendedReturn } from "@/data/investments";
+import { recommendedAllocations, actualAllocations, investmentOptions, getExpectedReturn, categoryColors, categoryLabels, calculateBlendedReturn, type Allocation } from "@/data/investments";
 import { projectChild, projectMarley, type ProjectionResult } from "@/lib/projections";
 import { AllocationEditor } from "@/components/AllocationEditor";
 import { formatCurrency, formatPct } from "@/lib/utils";
@@ -64,6 +64,7 @@ export default function PlannerPage() {
     }));
   };
 
+  // Target projections — based on user-editable allocations in state
   const projections = useMemo(() => {
     const marley = projectMarley({
       name: "Marley",
@@ -96,6 +97,44 @@ export default function PlannerPage() {
       yearsToCollege: 3.5,
       yearsInCollege: 4,
       allocations: states.dean.allocations,
+      duringCollegeReturn: 5,
+    });
+    return { marley, gabby, dean };
+  }, [states]);
+
+  // Current projections — based on actual NY 529 holdings (read-only allocations)
+  const currentProjections = useMemo(() => {
+    const marley = projectMarley({
+      name: "Marley",
+      currentBalance: CHILDREN.marley.balance,
+      monthlyContribution: states.marley.monthlyContribution,
+      lumpSum: states.marley.lumpSum,
+      totalCost: states.marley.totalCost,
+      yearsToCollege: 0,
+      yearsInCollege: 3,
+      allocations: actualAllocations.marley,
+      duringCollegeReturn: 4,
+    });
+    const gabby = projectChild({
+      name: "Gabby",
+      currentBalance: CHILDREN.gabby.balance,
+      monthlyContribution: states.gabby.monthlyContribution,
+      lumpSum: states.gabby.lumpSum,
+      totalCost: states.gabby.totalCost,
+      yearsToCollege: 2.5,
+      yearsInCollege: 4,
+      allocations: actualAllocations.gabby,
+      duringCollegeReturn: 5,
+    });
+    const dean = projectChild({
+      name: "Dean",
+      currentBalance: CHILDREN.dean.balance,
+      monthlyContribution: states.dean.monthlyContribution,
+      lumpSum: states.dean.lumpSum,
+      totalCost: states.dean.totalCost,
+      yearsToCollege: 3.5,
+      yearsInCollege: 4,
+      allocations: actualAllocations.dean,
       duringCollegeReturn: 5,
     });
     return { marley, gabby, dean };
@@ -196,6 +235,8 @@ export default function PlannerPage() {
                   color={CHILDREN[key].color}
                   state={states[key]}
                   projection={projections[key]}
+                  currentProjection={currentProjections[key]}
+                  currentAllocs={actualAllocations[key]}
                   onChange={(updates) => updateChild(key, updates)}
                 />
               ))}
@@ -206,11 +247,11 @@ export default function PlannerPage() {
                 <div className="text-base font-bold mt-0.5">{formatCurrency(totalCost)}</div>
               </div>
               <div className="rounded-lg bg-muted p-3">
-                <div className="text-xs text-muted-foreground">529 covers</div>
+                <div className="text-xs text-muted-foreground">529 covers (target)</div>
                 <div className="text-base font-bold mt-0.5 text-emerald-600">{formatCurrency(totalCovered)}</div>
               </div>
               <div className="rounded-lg bg-muted p-3">
-                <div className="text-xs text-muted-foreground">Total gap</div>
+                <div className="text-xs text-muted-foreground">Total gap (target)</div>
                 <div className="text-base font-bold mt-0.5 text-amber-600">{formatCurrency(totalGap)}</div>
               </div>
               <div className="rounded-lg bg-muted p-3">
@@ -244,6 +285,8 @@ export default function PlannerPage() {
                 balance={CHILDREN[key].balance}
                 state={states[key]}
                 projection={projections[key]}
+                currentProjection={currentProjections[key]}
+                currentAllocs={actualAllocations[key]}
                 costRange={CHILDREN[key].costRange}
                 onChange={(updates) => updateChild(key, updates)}
               />
@@ -332,16 +375,21 @@ function ChildSnapshot({
   color,
   state,
   projection,
+  currentProjection,
+  currentAllocs,
   onChange,
 }: {
   label: string;
   color: string;
   state: ChildState;
   projection: ProjectionResult;
+  currentProjection: ProjectionResult;
+  currentAllocs: Allocation[];
   onChange: (updates: Partial<ChildState>) => void;
 }) {
   const [editingAlloc, setEditingAlloc] = useState(false);
-  const blendedReturn = calculateBlendedReturn(state.allocations, investmentOptions);
+  const targetReturn = calculateBlendedReturn(state.allocations, investmentOptions);
+  const currentReturn = calculateBlendedReturn(currentAllocs, investmentOptions);
 
   return (
     <div className="rounded-xl border bg-card p-4 space-y-3">
@@ -357,35 +405,74 @@ function ChildSnapshot({
         <div className="text-2xl font-bold mt-0.5">{formatCurrency(projection.totalCost)}</div>
       </div>
 
-      {/* 529 covers / Gap */}
-      <div className="grid grid-cols-2 gap-2">
-        <div className="rounded-lg bg-muted p-2 text-center">
-          <div className="text-[11px] text-muted-foreground">529 covers</div>
-          <div className="text-sm font-semibold text-emerald-600 mt-0.5">{formatCurrency(projection.covered)}</div>
-        </div>
-        <div className="rounded-lg bg-muted p-2 text-center">
-          <div className="text-[11px] text-muted-foreground">Gap</div>
-          <div className="text-sm font-semibold text-amber-600 mt-0.5">{formatCurrency(projection.gap)}</div>
+      {/* Current vs Target comparison table */}
+      <div className="rounded-lg bg-muted/50 overflow-hidden">
+        <div className="grid grid-cols-3 gap-0 text-[11px]">
+          {/* Header row */}
+          <div className="px-2 py-1.5 text-muted-foreground font-medium"></div>
+          <div className="px-2 py-1.5 text-center text-muted-foreground font-medium border-l border-border/50">Current</div>
+          <div className="px-2 py-1.5 text-center font-medium border-l border-border/50" style={{ color }}>Target</div>
+
+          {/* 529 covers */}
+          <div className="px-2 py-1 text-muted-foreground border-t border-border/30">529 covers</div>
+          <div className="px-2 py-1 text-center border-t border-l border-border/30">{formatCurrency(currentProjection.covered)}</div>
+          <div className="px-2 py-1 text-center font-semibold text-emerald-600 border-t border-l border-border/30">{formatCurrency(projection.covered)}</div>
+
+          {/* Gap */}
+          <div className="px-2 py-1 text-muted-foreground border-t border-border/30">Gap</div>
+          <div className="px-2 py-1 text-center border-t border-l border-border/30">{formatCurrency(currentProjection.gap)}</div>
+          <div className="px-2 py-1 text-center font-semibold text-amber-600 border-t border-l border-border/30">{formatCurrency(projection.gap)}</div>
+
+          {/* Est. return */}
+          <div className="px-2 py-1 text-muted-foreground border-t border-border/30">Est. return</div>
+          <div className="px-2 py-1 text-center border-t border-l border-border/30">{formatPct(currentReturn)}</div>
+          <div className="px-2 py-1 text-center font-semibold border-t border-l border-border/30" style={{ color }}>{formatPct(targetReturn)}</div>
         </div>
       </div>
 
-      {/* Progress bar */}
-      <div>
-        <div className="h-2.5 rounded-full bg-muted overflow-hidden">
-          <div
-            className="h-full rounded-full transition-all duration-500"
-            style={{ width: `${Math.min(projection.percentFunded, 100)}%`, backgroundColor: color }}
-          />
+      {/* Progress bars — stacked current (muted) + target (colored) */}
+      <div className="space-y-1.5">
+        <div>
+          <div className="h-2 rounded-full bg-muted overflow-hidden">
+            <div className="h-full rounded-full bg-muted-foreground/30 transition-all duration-500"
+              style={{ width: `${Math.min(currentProjection.percentFunded, 100)}%` }} />
+          </div>
+          <div className="text-[10px] text-muted-foreground mt-0.5">{currentProjection.percentFunded}% funded at current</div>
         </div>
-        <div className="text-xs text-muted-foreground mt-1 text-center">{projection.percentFunded}% funded</div>
+        <div>
+          <div className="h-2 rounded-full bg-muted overflow-hidden">
+            <div className="h-full rounded-full transition-all duration-500"
+              style={{ width: `${Math.min(projection.percentFunded, 100)}%`, backgroundColor: color }} />
+          </div>
+          <div className="text-[10px] text-muted-foreground mt-0.5">{projection.percentFunded}% funded at target</div>
+        </div>
       </div>
 
-      {/* Allocations */}
+      {/* Current holdings (read-only) */}
+      <div className="border-t pt-3 space-y-2">
+        <div className="text-xs font-medium text-muted-foreground">Today's holdings</div>
+        <div className="space-y-1">
+          {currentAllocs.map((alloc) => {
+            const opt = investmentOptions.find((o) => o.id === alloc.optionId);
+            if (!opt) return null;
+            return (
+              <div key={alloc.optionId} className="flex items-center justify-between text-xs">
+                <div className="flex items-center gap-1.5 min-w-0">
+                  <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: categoryColors[opt.category] }} />
+                  <span className="text-muted-foreground truncate">{opt.shortName}</span>
+                </div>
+                <span className="font-medium ml-2 flex-shrink-0">{alloc.percentage}%</span>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Target allocations (editable) */}
       <div className="border-t pt-3">
         <div className="flex items-center justify-between mb-2">
           <div className="text-xs font-medium">
-            Allocations ·{" "}
-            <span style={{ color }}>{formatPct(blendedReturn)} blended</span>
+            Target · <span style={{ color }}>{formatPct(targetReturn)} blended</span>
           </div>
           <button
             onClick={() => setEditingAlloc(!editingAlloc)}
@@ -395,17 +482,14 @@ function ChildSnapshot({
           </button>
         </div>
         {!editingAlloc ? (
-          <div className="space-y-1.5">
+          <div className="space-y-1">
             {state.allocations.map((alloc) => {
               const opt = investmentOptions.find((o) => o.id === alloc.optionId);
               if (!opt) return null;
               return (
                 <div key={alloc.optionId} className="flex items-center justify-between text-xs">
                   <div className="flex items-center gap-1.5 min-w-0">
-                    <span
-                      className="w-2 h-2 rounded-full flex-shrink-0"
-                      style={{ backgroundColor: categoryColors[opt.category] }}
-                    />
+                    <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: categoryColors[opt.category] }} />
                     <span className="text-muted-foreground truncate">{opt.shortName}</span>
                   </div>
                   <span className="font-medium ml-2 flex-shrink-0">{alloc.percentage}%</span>
