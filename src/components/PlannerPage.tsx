@@ -3,13 +3,10 @@ import React, { useState, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { ChildPlannerCard, type ChildState } from "@/components/ChildPlannerCard";
-import { recommendedAllocations, investmentOptions, getExpectedReturn, categoryColors, categoryLabels } from "@/data/investments";
-import { projectChild, projectMarley } from "@/lib/projections";
+import { recommendedAllocations, investmentOptions, getExpectedReturn, categoryColors, categoryLabels, calculateBlendedReturn } from "@/data/investments";
+import { projectChild, projectMarley, type ProjectionResult } from "@/lib/projections";
+import { AllocationEditor } from "@/components/AllocationEditor";
 import { formatCurrency, formatPct } from "@/lib/utils";
-import {
-  BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend, Cell,
-  PieChart, Pie,
-} from "recharts";
 
 const CHILDREN = {
   marley: { label: "Marley", color: "#E24B4A", balance: 50553, subtitle: "Freshman at UDel · withdrawing now", costRange: [40000, 260000] as [number, number], yearsToCollege: 0, yearsInCollege: 3 },
@@ -110,12 +107,6 @@ export default function PlannerPage() {
   const totalMonthly = states.marley.monthlyContribution + states.gabby.monthlyContribution + states.dean.monthlyContribution;
   const totalLump = states.marley.lumpSum + states.gabby.lumpSum + states.dean.lumpSum;
 
-  const barData = (Object.keys(CHILDREN) as ChildKey[]).map((key) => ({
-    name: CHILDREN[key].label,
-    covered: projections[key].covered,
-    gap: projections[key].gap,
-  }));
-
   // Investment options reference data
   const optionsByCategory = investmentOptions.reduce<Record<string, typeof investmentOptions>>((acc, opt) => {
     (acc[opt.category] = acc[opt.category] || []).push(opt);
@@ -191,55 +182,44 @@ export default function PlannerPage() {
           </CardContent>
         </Card>
 
-        {/* Charts */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm">Coverage vs. gap by child</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ResponsiveContainer width="100%" height={260}>
-                <BarChart data={barData} barCategoryGap="20%">
-                  <XAxis dataKey="name" tick={{ fontSize: 13 }} axisLine={false} tickLine={false} />
-                  <YAxis
-                    tickFormatter={(v) => `$${(v / 1000).toFixed(0)}k`}
-                    tick={{ fontSize: 11 }}
-                    axisLine={false}
-                    tickLine={false}
-                  />
-                  <Tooltip
-                    formatter={(v: number) => formatCurrency(v)}
-                    contentStyle={{
-                      borderRadius: 8,
-                      border: "1px solid hsl(var(--border))",
-                      background: "hsl(var(--card))",
-                      fontSize: 13,
-                    }}
-                  />
-                  <Bar dataKey="covered" stackId="a" name="529 covers" fill="#1D9E75" radius={[0, 0, 0, 0]} />
-                  <Bar dataKey="gap" stackId="a" name="Gap" fill="#BA7517" radius={[4, 4, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
-              <div className="flex gap-4 justify-center text-xs text-muted-foreground mt-1">
-                <span className="flex items-center gap-1.5">
-                  <span className="w-2.5 h-2.5 rounded-sm bg-emerald-600" /> 529 covers
-                </span>
-                <span className="flex items-center gap-1.5">
-                  <span className="w-2.5 h-2.5 rounded-sm bg-amber-600" /> Gap
-                </span>
+        {/* Projected outcomes snapshot */}
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm">Projected outcomes by graduation</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {(Object.keys(CHILDREN) as ChildKey[]).map((key) => (
+                <ChildSnapshot
+                  key={key}
+                  label={CHILDREN[key].label}
+                  color={CHILDREN[key].color}
+                  state={states[key]}
+                  projection={projections[key]}
+                  onChange={(updates) => updateChild(key, updates)}
+                />
+              ))}
+            </div>
+            <div className="mt-4 pt-4 border-t grid grid-cols-2 sm:grid-cols-4 gap-3">
+              <div className="rounded-lg bg-muted p-3">
+                <div className="text-xs text-muted-foreground">Total cost (3 kids)</div>
+                <div className="text-base font-bold mt-0.5">{formatCurrency(totalCost)}</div>
               </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm">Current allocation by category (all accounts)</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <AllocationPieChart states={states} />
-            </CardContent>
-          </Card>
-        </div>
+              <div className="rounded-lg bg-muted p-3">
+                <div className="text-xs text-muted-foreground">529 covers</div>
+                <div className="text-base font-bold mt-0.5 text-emerald-600">{formatCurrency(totalCovered)}</div>
+              </div>
+              <div className="rounded-lg bg-muted p-3">
+                <div className="text-xs text-muted-foreground">Total gap</div>
+                <div className="text-base font-bold mt-0.5 text-amber-600">{formatCurrency(totalGap)}</div>
+              </div>
+              <div className="rounded-lg bg-muted p-3">
+                <div className="text-xs text-muted-foreground">New contributions</div>
+                <div className="text-base font-bold mt-0.5">{formatCurrency(totalMonthly * 12)}<span className="text-sm font-normal text-muted-foreground">/yr</span></div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Per-child planners */}
         <Tabs defaultValue="marley">
@@ -347,67 +327,99 @@ export default function PlannerPage() {
   );
 }
 
-function AllocationPieChart({ states }: { states: Record<ChildKey, ChildState> }) {
-  const categoryTotals: Record<string, number> = {};
-  let totalDollars = 0;
-
-  for (const key of Object.keys(CHILDREN) as ChildKey[]) {
-    const balance = CHILDREN[key].balance;
-    for (const alloc of states[key].allocations) {
-      const opt = investmentOptions.find((o) => o.id === alloc.optionId);
-      if (opt) {
-        const dollars = (alloc.percentage / 100) * balance;
-        categoryTotals[opt.category] = (categoryTotals[opt.category] || 0) + dollars;
-        totalDollars += dollars;
-      }
-    }
-  }
-
-  const pieData = Object.entries(categoryTotals)
-    .filter(([, v]) => v > 0)
-    .map(([cat, val]) => ({
-      name: categoryLabels[cat],
-      value: Math.round(val),
-      color: categoryColors[cat],
-      pct: Math.round((val / totalDollars) * 100),
-    }));
+function ChildSnapshot({
+  label,
+  color,
+  state,
+  projection,
+  onChange,
+}: {
+  label: string;
+  color: string;
+  state: ChildState;
+  projection: ProjectionResult;
+  onChange: (updates: Partial<ChildState>) => void;
+}) {
+  const [editingAlloc, setEditingAlloc] = useState(false);
+  const blendedReturn = calculateBlendedReturn(state.allocations, investmentOptions);
 
   return (
-    <div>
-      <ResponsiveContainer width="100%" height={220}>
-        <PieChart>
-          <Pie
-            data={pieData}
-            dataKey="value"
-            cx="50%"
-            cy="50%"
-            innerRadius={55}
-            outerRadius={90}
-            paddingAngle={2}
-            stroke="none"
-          >
-            {pieData.map((entry, idx) => (
-              <Cell key={idx} fill={entry.color} />
-            ))}
-          </Pie>
-          <Tooltip
-            formatter={(v: number) => formatCurrency(v)}
-            contentStyle={{
-              borderRadius: 8,
-              border: "1px solid hsl(var(--border))",
-              background: "hsl(var(--card))",
-              fontSize: 13,
-            }}
+    <div className="rounded-xl border bg-card p-4 space-y-3">
+      {/* Header */}
+      <div className="flex items-center gap-2">
+        <span className="w-3 h-3 rounded-full flex-shrink-0" style={{ backgroundColor: color }} />
+        <span className="font-semibold text-sm">{label}</span>
+      </div>
+
+      {/* 4yr cost */}
+      <div className="text-center">
+        <div className="text-xs text-muted-foreground">4yr cost</div>
+        <div className="text-2xl font-bold mt-0.5">{formatCurrency(projection.totalCost)}</div>
+      </div>
+
+      {/* 529 covers / Gap */}
+      <div className="grid grid-cols-2 gap-2">
+        <div className="rounded-lg bg-muted p-2 text-center">
+          <div className="text-[11px] text-muted-foreground">529 covers</div>
+          <div className="text-sm font-semibold text-emerald-600 mt-0.5">{formatCurrency(projection.covered)}</div>
+        </div>
+        <div className="rounded-lg bg-muted p-2 text-center">
+          <div className="text-[11px] text-muted-foreground">Gap</div>
+          <div className="text-sm font-semibold text-amber-600 mt-0.5">{formatCurrency(projection.gap)}</div>
+        </div>
+      </div>
+
+      {/* Progress bar */}
+      <div>
+        <div className="h-2.5 rounded-full bg-muted overflow-hidden">
+          <div
+            className="h-full rounded-full transition-all duration-500"
+            style={{ width: `${Math.min(projection.percentFunded, 100)}%`, backgroundColor: color }}
           />
-        </PieChart>
-      </ResponsiveContainer>
-      <div className="flex flex-wrap gap-3 justify-center text-xs text-muted-foreground">
-        {pieData.map((d) => (
-          <span key={d.name} className="flex items-center gap-1.5">
-            <span className="w-2.5 h-2.5 rounded-sm" style={{ backgroundColor: d.color }} />
-            {d.name} ({d.pct}%)
-          </span>
-        ))}
+        </div>
+        <div className="text-xs text-muted-foreground mt-1 text-center">{projection.percentFunded}% funded</div>
+      </div>
+
+      {/* Allocations */}
+      <div className="border-t pt-3">
+        <div className="flex items-center justify-between mb-2">
+          <div className="text-xs font-medium">
+            Allocations ·{" "}
+            <span style={{ color }}>{formatPct(blendedReturn)} blended</span>
+          </div>
+          <button
+            onClick={() => setEditingAlloc(!editingAlloc)}
+            className="text-xs text-muted-foreground hover:text-foreground underline-offset-2 hover:underline transition-colors"
+          >
+            {editingAlloc ? "Done" : "Edit"}
+          </button>
+        </div>
+        {!editingAlloc ? (
+          <div className="space-y-1.5">
+            {state.allocations.map((alloc) => {
+              const opt = investmentOptions.find((o) => o.id === alloc.optionId);
+              if (!opt) return null;
+              return (
+                <div key={alloc.optionId} className="flex items-center justify-between text-xs">
+                  <div className="flex items-center gap-1.5 min-w-0">
+                    <span
+                      className="w-2 h-2 rounded-full flex-shrink-0"
+                      style={{ backgroundColor: categoryColors[opt.category] }}
+                    />
+                    <span className="text-muted-foreground truncate">{opt.shortName}</span>
+                  </div>
+                  <span className="font-medium ml-2 flex-shrink-0">{alloc.percentage}%</span>
+                </div>
+              );
+            })}
+          </div>
+        ) : (
+          <AllocationEditor
+            allocations={state.allocations}
+            onChange={(a) => onChange({ allocations: a })}
+            childColor={color}
+          />
+        )}
       </div>
     </div>
   );
