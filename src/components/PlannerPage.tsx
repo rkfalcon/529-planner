@@ -283,6 +283,7 @@ export default function PlannerPage() {
                 subtitle={CHILDREN[key].subtitle}
                 color={CHILDREN[key].color}
                 balance={CHILDREN[key].balance}
+                yearsToCollege={CHILDREN[key].yearsToCollege}
                 state={states[key]}
                 projection={projections[key]}
                 currentProjection={currentProjections[key]}
