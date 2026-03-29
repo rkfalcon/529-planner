@@ -50,29 +50,29 @@ function InfoTooltip({ text, below = true }: { text: string; below?: boolean }) 
   );
 }
 
+const DEFAULT_STATES: Record<ChildKey, ChildState> = {
+  marley: { monthlyContribution: 300, lumpSum: 0, totalCost: 140000, allocations: [...recommendedAllocations.marley.allocations] },
+  gabby:  { monthlyContribution: 300, lumpSum: 0, totalCost: 215000, allocations: [...recommendedAllocations.gabby.allocations] },
+  dean:   { monthlyContribution: 300, lumpSum: 0, totalCost: 225000, allocations: [...recommendedAllocations.dean.allocations] },
+};
+
 export default function PlannerPage() {
   const [states, setStates] = useState<Record<ChildKey, ChildState>>({
-    marley: {
-      monthlyContribution: 300,
-      lumpSum: 0,
-      totalCost: 140000,
-      allocations: [...recommendedAllocations.marley.allocations],
-    },
-    gabby: {
-      monthlyContribution: 300,
-      lumpSum: 0,
-      totalCost: 215000,
-      allocations: [...recommendedAllocations.gabby.allocations],
-    },
-    dean: {
-      monthlyContribution: 300,
-      lumpSum: 0,
-      totalCost: 225000,
-      allocations: [...recommendedAllocations.dean.allocations],
-    },
+    marley: { ...DEFAULT_STATES.marley, allocations: [...DEFAULT_STATES.marley.allocations] },
+    gabby:  { ...DEFAULT_STATES.gabby,  allocations: [...DEFAULT_STATES.gabby.allocations]  },
+    dean:   { ...DEFAULT_STATES.dean,   allocations: [...DEFAULT_STATES.dean.allocations]   },
   });
 
   const [activePreset, setActivePreset] = useState(0);
+
+  const resetToDefaults = () => {
+    setStates({
+      marley: { ...DEFAULT_STATES.marley, allocations: [...DEFAULT_STATES.marley.allocations] },
+      gabby:  { ...DEFAULT_STATES.gabby,  allocations: [...DEFAULT_STATES.gabby.allocations]  },
+      dean:   { ...DEFAULT_STATES.dean,   allocations: [...DEFAULT_STATES.dean.allocations]   },
+    });
+    setActivePreset(0);
+  };
 
   const updateChild = (key: ChildKey, updates: Partial<ChildState>) => {
     setStates((prev) => ({ ...prev, [key]: { ...prev[key], ...updates } }));
@@ -317,7 +317,20 @@ export default function PlannerPage() {
         {/* Preset contribution buttons */}
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-sm">Quick contribution presets</CardTitle>
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-sm">Quick contribution presets</CardTitle>
+              <button
+                onClick={resetToDefaults}
+                title="Reset all values to defaults"
+                className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs text-muted-foreground hover:text-foreground rounded-lg border border-border hover:bg-muted transition-all"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
+                  <path d="M3 3v5h5" />
+                </svg>
+                Reset all
+              </button>
+            </div>
           </CardHeader>
           <CardContent>
             <div className="flex flex-wrap gap-2">
