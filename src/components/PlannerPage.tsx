@@ -450,7 +450,16 @@ export default function PlannerPage() {
                         const er = getExpectedReturn(opt);
                         return (
                           <tr key={opt.id} className="border-b border-border/50 hover:bg-muted/30">
-                            <td className="py-1.5 pr-4">{opt.shortName}</td>
+                            <td className="py-1.5 pr-4">
+                              <a
+                                href={`https://www.nysaves.org/price-and-performance/${opt.nysavesId}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-blue-600 hover:text-blue-800 hover:underline dark:text-blue-400 dark:hover:text-blue-300 transition-colors"
+                              >
+                                {opt.name}
+                              </a>
+                            </td>
                             <td className="py-1.5 text-right">${opt.unitPrice.toFixed(2)}</td>
                             <td className={`py-1.5 text-right ${opt.ytdReturn >= 0 ? "text-emerald-600" : "text-red-500"}`}>
                               {formatPct(opt.ytdReturn)}

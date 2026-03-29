@@ -1,5 +1,6 @@
 export interface InvestmentOption {
   id: string;
+  nysavesId: string;         // numeric ID used in nysaves.org URLs
   name: string;
   shortName: string;
   category: "aggressive" | "growth" | "moderate" | "conservative" | "income";
@@ -17,6 +18,7 @@ export interface InvestmentOption {
 export const investmentOptions: InvestmentOption[] = [
   {
     id: "growth-stock-index",
+    nysavesId: "1003021",
     name: "Growth Stock Index Portfolio",
     shortName: "Growth Stock Idx",
     category: "aggressive",
@@ -32,6 +34,7 @@ export const investmentOptions: InvestmentOption[] = [
   },
   {
     id: "global-equity",
+    nysavesId: "1003014",
     name: "Global Equity Portfolio",
     shortName: "Global Equity",
     category: "aggressive",
@@ -47,6 +50,7 @@ export const investmentOptions: InvestmentOption[] = [
   },
   {
     id: "us-stock-market-index",
+    nysavesId: "1003063",
     name: "U.S. Stock Market Index Portfolio",
     shortName: "US Stock Mkt Idx",
     category: "aggressive",
@@ -62,6 +66,7 @@ export const investmentOptions: InvestmentOption[] = [
   },
   {
     id: "social-index",
+    nysavesId: "1003040",
     name: "Social Index Portfolio",
     shortName: "Social Index",
     category: "aggressive",
@@ -77,6 +82,7 @@ export const investmentOptions: InvestmentOption[] = [
   },
   {
     id: "value-stock-index",
+    nysavesId: "1003022",
     name: "Value Stock Index Portfolio",
     shortName: "Value Stock Idx",
     category: "growth",
@@ -92,6 +98,7 @@ export const investmentOptions: InvestmentOption[] = [
   },
   {
     id: "mid-cap-stock-index",
+    nysavesId: "1003020",
     name: "Mid-Cap Stock Index Portfolio",
     shortName: "Mid-Cap Idx",
     category: "growth",
@@ -107,6 +114,7 @@ export const investmentOptions: InvestmentOption[] = [
   },
   {
     id: "small-cap-stock-index",
+    nysavesId: "1003023",
     name: "Small-Cap Stock Index Portfolio",
     shortName: "Small-Cap Idx",
     category: "growth",
@@ -122,6 +130,7 @@ export const investmentOptions: InvestmentOption[] = [
   },
   {
     id: "developed-markets-index",
+    nysavesId: "1003026",
     name: "Developed Markets Index Portfolio",
     shortName: "Dev Mkts Idx",
     category: "growth",
@@ -137,6 +146,7 @@ export const investmentOptions: InvestmentOption[] = [
   },
   {
     id: "international-stock-market-index",
+    nysavesId: "1003064",
     name: "International Stock Market Index Portfolio",
     shortName: "Intl Stock Idx",
     category: "growth",
@@ -152,6 +162,7 @@ export const investmentOptions: InvestmentOption[] = [
   },
   {
     id: "growth-portfolio",
+    nysavesId: "1003015",
     name: "Growth Portfolio",
     shortName: "Growth",
     category: "moderate",
@@ -167,6 +178,7 @@ export const investmentOptions: InvestmentOption[] = [
   },
   {
     id: "moderate-growth",
+    nysavesId: "1003016",
     name: "Moderate Growth Portfolio",
     shortName: "Moderate Growth",
     category: "moderate",
@@ -182,6 +194,7 @@ export const investmentOptions: InvestmentOption[] = [
   },
   {
     id: "conservative-growth",
+    nysavesId: "1003067",
     name: "Conservative Growth Portfolio",
     shortName: "Conserv Growth",
     category: "moderate",
@@ -197,6 +210,7 @@ export const investmentOptions: InvestmentOption[] = [
   },
   {
     id: "income-portfolio",
+    nysavesId: "1003017",
     name: "Income Portfolio",
     shortName: "Income",
     category: "conservative",
@@ -212,6 +226,7 @@ export const investmentOptions: InvestmentOption[] = [
   },
   {
     id: "bond-market-index",
+    nysavesId: "1003024",
     name: "Bond Market Index Portfolio",
     shortName: "Bond Mkt Idx",
     category: "conservative",
@@ -227,6 +242,7 @@ export const investmentOptions: InvestmentOption[] = [
   },
   {
     id: "conservative-income",
+    nysavesId: "1003018",
     name: "Conservative Income Portfolio",
     shortName: "Conserv Income",
     category: "income",
@@ -242,6 +258,7 @@ export const investmentOptions: InvestmentOption[] = [
   },
   {
     id: "short-term-bond-index",
+    nysavesId: "1003065",
     name: "Short Term Bond Market Index Portfolio",
     shortName: "Short Term Bond",
     category: "income",
@@ -257,6 +274,7 @@ export const investmentOptions: InvestmentOption[] = [
   },
   {
     id: "international-bond-index",
+    nysavesId: "1003066",
     name: "International Bond Market Index Portfolio",
     shortName: "Intl Bond Idx",
     category: "income",
@@ -272,6 +290,7 @@ export const investmentOptions: InvestmentOption[] = [
   },
   {
     id: "interest-accumulation",
+    nysavesId: "1003019",
     name: "Interest Accumulation Portfolio",
     shortName: "Interest Accum",
     category: "income",
